@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+       
+         */
+        #map {
+          height: 100%;
+        }
+        #location {
+            text-align: center;
+        }
+        html,
+        body {
+          height: 90%;
+          margin: 0;
+          padding: 0;
+        }
+        h1{
+            text-align: center;
+
+        }
+  
+        .custom-map-control-button {
+          background-color: #fff;
+          border: 0;
+          border-radius: 2px;
+          box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.3);
+          margin: 10px;
+          padding: 0 0.5em;
+          font: 400 18px Roboto, Arial, sans-serif;
+          overflow: hidden;
+          height: 40px;
+          cursor: pointer;
+        }
+        .custom-map-control-button:hover {
+          background: rgb(235, 235, 235);
+        }
+      </style>
+    <script>
+      // Your existing JavaScript code goes here
+      document.addEventListener("DOMContentLoaded", () => {
+        const locationElement = document.getElementById("location");
+
+        if ("geolocation" in navigator) {
+          let map, infoWindow;
+          let pathCoordinates = []; // Array to store the path coordinates
+
+          // Initialize the map
+          function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+              center: { lat: 0, lng: 0 }, // Default center
+              zoom: 14, // Default zoom level
+            });
+            infoWindow = new google.maps.InfoWindow();
+
+            const locationButton = document.createElement("button");
+            locationButton.textContent = "Pan to Current Location";
+            locationButton.classList.add("custom-map-control-button");
+            map.controls[google.maps.ControlPosition.TOP_CENTER].push(
+              locationButton
+            );
+            locationButton.addEventListener("click", () => {
+              if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                  (position) => {
+                    const pos = {
+                      lat: position.coords.latitude,
+                      lng: position.coords.longitude,
+                    };
+
+                    infoWindow.setPosition(pos);
+                    infoWindow.setContent("Location found.");
+                    infoWindow.open(map);
+                    map.setCenter(pos);
+                  },
+                  () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                  }
+                );
+              } else {
+                handleLocationError(false, infoWindow, map.getCenter());
+              }
+            });
+
+            // Start tracking the user's position and update the path
+            navigator.geolocation.watchPosition(
+              (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                // Add the new coordinates to the pathCoordinates array
+                pathCoordinates.push({ lat: latitude, lng: longitude });
+
+                // Update the path on the map
+                if (pathCoordinates.length > 1) {
+                  const path = new google.maps.Polyline({
+                    path: pathCoordinates,
+                    geodesic: true,
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 0.5,
+                    strokeWeight: 3,
+                  });
+
+                  path.setMap(map);
+                }
+
+                // Display the current coordinates
+                locationElement.innerHTML = `Latitude: ${latitude}, Longitude: ${longitude}`;
+              },
+              (error) => {
+                locationElement.innerHTML = `Error getting location: ${error.message}`;
+              }
+            );
+          }
+
+          function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+            infoWindow.setPosition(pos);
+            infoWindow.setContent(
+              browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+            );
+            infoWindow.open(map);
+          }
+
+          initMap();
+        } else {
+          locationElement.innerHTML = "Geolocation is not supported by your browser.";
+        }
+      });
+    </script>
+    <title>Geolocation</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script>
+      // Your existing map-related JavaScript code goes here
+      let map, infoWindow;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 0, lng: 0 }, // Default center
+          zoom: 14, // Default zoom level
+        });
+        infoWindow = new google.maps.InfoWindow();
+
+        // Creating and displaying the polyline
+        var polyline = new google.maps.Polyline({
+          path: [
+            new google.maps.LatLng(47.3690239, 8.5380326),
+            new google.maps.LatLng(1.352083, 103.819836),
+            new google.maps.LatLng(-33.867139, 151.207114),
+          ],
+          strokeColor: '#FF0000',
+          strokeOpacity: 0.5,
+          strokeWeight: 3,
+          geodesic: true,
+        });
+
+        polyline.setMap(map);
+      }
+
+      window.initMap = initMap;
+    </script>
+    <title> Geolocation</title>
+    <link rel="manifest" href="manifest.json">
+  </head>
+  <body>
+    <h1>Location Tracker</h1>
+    <div id="map" style="width: 100%; height: 400px;"></div>
+    <p id="location"></p>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmaPnfmF50Buq3IuMq0GgSc1yZOzPsNBk&callback=initMap&v=weekly"
+      defer
+    ></script>
+  </body>
+  <script>
+    window.addEventListener('load', () => {
+      registerSW();
+    });
+ 
+    // Register the Service Worker
+    async function registerSW() {
+      if ('serviceWorker' in navigator) {
+        try {
+          await navigator
+                .serviceWorker
+                .register('serviceworker.js');
+        }
+        catch (e) {
+          console.log('SW registration failed');
+        }
+      }
+    }
+ </script>
+</html>
